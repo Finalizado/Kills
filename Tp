@@ -1,72 +1,254 @@
 local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
 
-local MAX_PUNCH_DISTANCE = 12
-local PUNCH_COOLDOWN = 0.15
+local Player = Players.LocalPlayer
 
-local lastPunch = {}
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-muscleEvent.OnServerEvent:Connect(function(player, action, hand)
-	if action ~= "punch" then
-		return
+local SoundService = game:GetService("SoundService")
+
+local displayName = player.DisplayName
+if not displayName or displayName == "" then
+    displayName = player.Name
+end
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local title = ("Draco Hub V2.202 (Kills)| Hello %s"):format(displayName)
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PruebasFF/Rework/refs/heads/main/Draco%20librery%20oficial", true))()
+
+local window = library:AddWindow(title, {
+    main_color = Color3.fromRGB(0, 0, 0),
+    min_size = Vector2.new(400, 1000),
+    can_resize = true,
+})
+
+local Killer = window:AddTab("Kill")
+
+local titleLabel = Killer:AddLabel("Add the display name or initials of his clan")
+titleLabel.TextSize = 14
+titleLabel.Font = Enum.Font.Merriweather 
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local fileName = "GenesisBlacklist_"..LocalPlayer.Name..".txt"
+local blacklistWords = {}
+local active = {}
+local attackDelay = 0.06
+local characterLoaded = false
+local autoPunchActive = false
+
+local function trim(s) 
+	return s:match("^%s*(.-)%s*$") 
+end
+
+local function parseList(text)
+	blacklistWords = {}
+	if not text or text == "" then return end
+	for w in string.gmatch(text, "[^,]+") do
+		local t = trim(w):lower()
+		if t ~= "" then table.insert(blacklistWords, t) end
+	end
+end
+
+if isfile(fileName) then
+	parseList(readfile(fileName))
+else
+	writefile(fileName, "")
+end
+
+local function saveList()
+	writefile(fileName, table.concat(blacklistWords, ","))
+end
+
+local function nameMatchesAny(player)
+	if not player then return false end
+	local dn = (player.DisplayName or ""):lower()
+	for _, w in ipairs(blacklistWords) do
+		if w ~= "" and string.find(dn, w, 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
+local function refreshActive()
+	for k in pairs(active) do active[k] = nil end
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and nameMatchesAny(plr) then
+			active[plr] = true
+		end
+	end
+end
+
+function isAnyActive()
+	for _ in pairs(active) do
+		return true
+	end
+	return false
+end
+
+local function getHands(char)
+	repeat task.wait() until char and char:FindFirstChild("RightHand")
+	local right = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+	local left = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm")
+	return right, left
+end
+
+local function ensurePunchEquipped()
+	if not isAnyActive() then return nil end  -- 🔥 NO EQUIPAR si no hay targets
+
+	local char = LocalPlayer.Character
+	if not char then return nil end
+
+	local punch = char:FindFirstChild("Punch") or LocalPlayer.Backpack:FindFirstChild("Punch")
+
+	if punch and punch.Parent ~= char then
+		punch.Parent = char
 	end
 
-	local character = player.Character
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-
-	if not root or not humanoid or humanoid.Health <= 0 then
-		return
-	end
-
-	-- Anti-spam
-	local now = os.clock()
-
-	if lastPunch[player] and now - lastPunch[player] < PUNCH_COOLDOWN then
-		return
-	end
-
-	lastPunch[player] = now
-
-	-- El cliente NO decide el objetivo.
-	local target
-	local closestDistance = MAX_PUNCH_DISTANCE
-
-	for _, other in ipairs(Players:GetPlayers()) do
-		if other ~= player and other.Character then
-			local otherRoot =
-				other.Character:FindFirstChild("HumanoidRootPart")
-
-			local otherHumanoid =
-				other.Character:FindFirstChildOfClass("Humanoid")
-
-			if otherRoot and otherHumanoid and otherHumanoid.Health > 0 then
-				local distance =
-					(root.Position - otherRoot.Position).Magnitude
-
-				if distance <= closestDistance then
-					closestDistance = distance
-					target = other.Character
+	if not punch then
+		task.defer(function()
+			for i = 1, 40 do
+				if not isAnyActive() then return end -- 🔥 Detener si ya no hay targets
+				local p = LocalPlayer.Backpack:FindFirstChild("Punch")
+				if p then
+					p.Parent = LocalPlayer.Character
+					break
 				end
+				task.wait(0.1)
+			end
+		end)
+	end
+
+	return char:FindFirstChild("Punch")
+end
+
+local function waitForCharacter()
+	local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	characterLoaded = true
+
+	task.spawn(function()
+		repeat task.wait() until LocalPlayer:FindFirstChild("Backpack")
+
+		if isAnyActive() then  -- 🔥 SOLO EQUIPAR si hay alguien de la blacklist
+			for i = 1, 60 do
+				local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
+				if punch then
+					punch.Parent = char
+					break
+				end
+				task.wait(0.1)
+			end
+		end
+	end)
+
+	return char
+end
+
+blacklistLabel = Killer:AddLabel("")
+blacklistLabel.Text = (#blacklistWords == 0 and "Blacklist: (empty)" or "Blacklist: "..table.concat(blacklistWords, ","))
+
+local blacklistBox = Killer:AddTextBox("Add to Blacklist", function(txt)
+	parseList((table.concat(blacklistWords, ",")..","..txt))
+	saveList()
+	blacklistLabel.Text = (#blacklistWords == 0 and "Blacklist: (empty)" or "Blacklist: "..table.concat(blacklistWords, ","))
+
+	refreshActive()
+	if not isAnyActive() then autoPunchActive = false end
+end, {["placeholder"] = "Ej: MVX, Sigma, Juan"})
+
+local removeBox = Killer:AddTextBox("Remove from Blacklist", function(txt)
+	local toRemove = {}
+	for w in string.gmatch(txt, "[^,]+") do
+		local t = trim(w):lower()
+		if t ~= "" then table.insert(toRemove, t) end
+	end
+
+	for _, word in ipairs(toRemove) do
+		for i = #blacklistWords, 1, -1 do
+			if blacklistWords[i] == word then
+				table.remove(blacklistWords, i)
 			end
 		end
 	end
 
-	if not target then
-		return
-	end
+	saveList()
+	blacklistLabel.Text = (#blacklistWords == 0 and "Blacklist: (empty)" or "Blacklist: "..table.concat(blacklistWords, ","))
 
-	-- IMPORTANTE:
-	-- Aplica aquí tu lógica REAL de daño.
-	-- Nunca recibas el daño desde el cliente.
+	refreshActive()
 
-	local targetHumanoid =
-		target:FindFirstChildOfClass("Humanoid")
+	if not isAnyActive() then autoPunchActive = false end
+end)
 
-	if targetHumanoid then
-		-- targetHumanoid:TakeDamage(TU_DAÑO)
+RunService.Heartbeat:Connect(function()
+	refreshActive()
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(attackDelay)
+
+		if not isAnyActive() then
+			continue
+		end
+
+		if not LocalPlayer.Character then continue end
+		if not characterLoaded then continue end
+
+		local punch = ensurePunchEquipped()
+		if not punch then continue end
+
+		local char = LocalPlayer.Character
+		local rightHand, leftHand = getHands(char)
+
+		for plr in pairs(active) do
+			if plr and plr.Character then
+				local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+				local hum = plr.Character:FindFirstChild("Humanoid")
+
+				if hrp and hum and hum.Health > 0 then
+					pcall(function()
+						LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+						LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+					end)
+
+					pcall(function()
+						firetouchinterest(rightHand, hrp, 1)
+						firetouchinterest(leftHand, hrp, 1)
+						firetouchinterest(rightHand, hrp, 0)
+						firetouchinterest(leftHand, hrp, 0)
+					end)
+				end
+			end
+		end
 	end
 end)
 
-Players.PlayerRemoving:Connect(function(player)
-	lastPunch[player] = nil
+Players.PlayerAdded:Connect(function(plr)
+	plr:GetPropertyChangedSignal("DisplayName"):Connect(function()
+		refreshActive()
+	end)
 end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+	characterLoaded = false
+	task.wait(0.2)
+
+	waitForCharacter()
+	refreshActive()
+
+	if isAnyActive() then
+		task.defer(function()
+			for i = 1, 50 do
+				if not isAnyActive() then break end
+				ensurePunchEquipped()
+				task.wait(0.15)
+			end
+		end)
+	end
+end)
+
+waitForCharacter()
+refreshActive()
