@@ -97,8 +97,7 @@ local function getHands(char)
 end
 
 local function ensurePunchEquipped()
-	if not isAnyActive() then return nil end
-local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+	if not isAnyActive() then return nil local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
     if selectedDisplayName and selectedDisplayName ~= "" then
         -- Buscar jugador por DisplayName
         local target = nil
@@ -156,8 +155,7 @@ end) -- 🔥 NO EQUIPAR si no hay targets
 	if not punch then
 		task.defer(function()
 			for i = 1, 40 do
-				if not isAnyActive() then return end
-local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+				if not isAnyActive() then return local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
     if selectedDisplayName and selectedDisplayName ~= "" then
         -- Buscar jugador por DisplayName
         local target = nil
@@ -222,8 +220,7 @@ local function waitForCharacter()
 	task.spawn(function()
 		repeat task.wait() until LocalPlayer:FindFirstChild("Backpack")
 
-		if isAnyActive() then
-local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+		if isAnyActive() then local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
     if selectedDisplayName and selectedDisplayName ~= "" then
         -- Buscar jugador por DisplayName
         local target = nil
