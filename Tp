@@ -1,0 +1,28 @@
+local autoTP = true
+local tpDistance = 4
+
+local function autoTeleportToBlacklist()
+	while autoTP do
+		refreshActive()
+
+		local myCharacter = LocalPlayer.Character
+		local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+
+		if myRoot then
+			for plr in pairs(active) do
+				if plr and plr.Character then
+					local targetRoot = plr.Character:FindFirstChild("HumanoidRootPart")
+
+					if targetRoot then
+						myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, tpDistance)
+						break
+					end
+				end
+			end
+		end
+
+		task.wait(0.2)
+	end
+end
+
+task.spawn(autoTeleportToBlacklist)
