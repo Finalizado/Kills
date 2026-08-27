@@ -1,28 +1,72 @@
-local autoTP = true
-local tpDistance = 4
+local Players = game:GetService("Players")
 
-local function autoTeleportToBlacklist()
-	while autoTP do
-		refreshActive()
+local MAX_PUNCH_DISTANCE = 12
+local PUNCH_COOLDOWN = 0.15
 
-		local myCharacter = LocalPlayer.Character
-		local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+local lastPunch = {}
 
-		if myRoot then
-			for plr in pairs(active) do
-				if plr and plr.Character then
-					local targetRoot = plr.Character:FindFirstChild("HumanoidRootPart")
+muscleEvent.OnServerEvent:Connect(function(player, action, hand)
+	if action ~= "punch" then
+		return
+	end
 
-					if targetRoot then
-						myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, tpDistance)
-						break
-					end
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+	if not root or not humanoid or humanoid.Health <= 0 then
+		return
+	end
+
+	-- Anti-spam
+	local now = os.clock()
+
+	if lastPunch[player] and now - lastPunch[player] < PUNCH_COOLDOWN then
+		return
+	end
+
+	lastPunch[player] = now
+
+	-- El cliente NO decide el objetivo.
+	local target
+	local closestDistance = MAX_PUNCH_DISTANCE
+
+	for _, other in ipairs(Players:GetPlayers()) do
+		if other ~= player and other.Character then
+			local otherRoot =
+				other.Character:FindFirstChild("HumanoidRootPart")
+
+			local otherHumanoid =
+				other.Character:FindFirstChildOfClass("Humanoid")
+
+			if otherRoot and otherHumanoid and otherHumanoid.Health > 0 then
+				local distance =
+					(root.Position - otherRoot.Position).Magnitude
+
+				if distance <= closestDistance then
+					closestDistance = distance
+					target = other.Character
 				end
 			end
 		end
-
-		task.wait(0.2)
 	end
-end
 
-task.spawn(autoTeleportToBlacklist)
+	if not target then
+		return
+	end
+
+	-- IMPORTANTE:
+	-- Aplica aquí tu lógica REAL de daño.
+	-- Nunca recibas el daño desde el cliente.
+
+	local targetHumanoid =
+		target:FindFirstChildOfClass("Humanoid")
+
+	if targetHumanoid then
+		-- targetHumanoid:TakeDamage(TU_DAÑO)
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	lastPunch[player] = nil
+end)
