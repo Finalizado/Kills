@@ -97,7 +97,52 @@ local function getHands(char)
 end
 
 local function ensurePunchEquipped()
-	if not isAnyActive() then return nil end  -- 🔥 NO EQUIPAR si no hay targets
+	if not isAnyActive() then return nil end
+local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+    if selectedDisplayName and selectedDisplayName ~= "" then
+        -- Buscar jugador por DisplayName
+        local target = nil
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.DisplayName == selectedDisplayName then
+                target = plr
+                break
+            end
+        end
+
+        if target then
+            followTarget = target.Name -- Guardamos Name real para seguir
+            following = true
+            print("âœ… Started following:", target.Name)
+            followPlayer(target)
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end) -- 🔥 NO EQUIPAR si no hay targets
 
 	local char = LocalPlayer.Character
 	if not char then return nil end
@@ -111,7 +156,52 @@ local function ensurePunchEquipped()
 	if not punch then
 		task.defer(function()
 			for i = 1, 40 do
-				if not isAnyActive() then return end -- 🔥 Detener si ya no hay targets
+				if not isAnyActive() then return end
+local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+    if selectedDisplayName and selectedDisplayName ~= "" then
+        -- Buscar jugador por DisplayName
+        local target = nil
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.DisplayName == selectedDisplayName then
+                target = plr
+                break
+            end
+        end
+
+        if target then
+            followTarget = target.Name -- Guardamos Name real para seguir
+            following = true
+            print("âœ… Started following:", target.Name)
+            followPlayer(target)
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end) -- 🔥 Detener si ya no hay targets
 				local p = LocalPlayer.Backpack:FindFirstChild("Punch")
 				if p then
 					p.Parent = LocalPlayer.Character
@@ -132,7 +222,52 @@ local function waitForCharacter()
 	task.spawn(function()
 		repeat task.wait() until LocalPlayer:FindFirstChild("Backpack")
 
-		if isAnyActive() then  -- 🔥 SOLO EQUIPAR si hay alguien de la blacklist
+		if isAnyActive() then
+local followDropdown = Killer:AddDropdown("Teleport player", function(selectedDisplayName)
+    if selectedDisplayName and selectedDisplayName ~= "" then
+        -- Buscar jugador por DisplayName
+        local target = nil
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.DisplayName == selectedDisplayName then
+                target = plr
+                break
+            end
+        end
+
+        if target then
+            followTarget = target.Name -- Guardamos Name real para seguir
+            following = true
+            print("âœ… Started following:", target.Name)
+            followPlayer(target)
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.DisplayName)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.DisplayName)
+        end
+    end
+
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end) -- 🔥 SOLO EQUIPAR si hay alguien de la blacklist
 			for i = 1, 60 do
 				local punch = LocalPlayer.Backpack:FindFirstChild("Punch")
 				if punch then
