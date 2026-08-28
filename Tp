@@ -3,8 +3,8 @@
     ╔══════════════════════════════════════════════════════════╗
     ║                 Muscle Legends Companion                 ║
     ║                    Version: 4.0.0                        ║
-    ║                 Developed by: MyersDev                   ║
-    ║      All rights reserved © 2024 - Professional Edition    ║
+    ║                 Developed by: Johan                      ║
+    ║      All rights reserved © 2024 - Professional Edition   ║
     ╚══════════════════════════════════════════════════════════╝
 ]]
 
@@ -12,9 +12,9 @@
 --                          INITIALIZATION
 -- ================================================================
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/iblameaabis/Ililililililililililililil/refs/heads/main/W%20UI", true))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PruebasFF/Rework/refs/heads/main/Draco%20librery%20oficial"))()
 
-local window = library:AddWindow("Private MyersDev", {
+local window = library:AddWindow("Private Draco Hub", {
     main_color = Color3.fromRGB(0, 0, 0),
     min_size = Vector2.new(650, 870),
     can_resize = true,
