@@ -1,34 +1,14 @@
-local function findEgg()
-    local backpack = player:FindFirstChildOfClass("Backpack")
-    local character = player.Character
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-    local function isProteinEgg(obj)
-        if not obj:IsA("Tool") then
-            return false
-        end
+local function showPosition()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
 
-        local name = obj.Name:lower()
-
-        return name == "huevos de proteina"
-            or name == "huevos de proteína"
-            or name == "protein eggs"
-    end
-
-    if character then
-        for _, obj in ipairs(character:GetChildren()) do
-            if isProteinEgg(obj) then
-                return obj
-            end
-        end
-    end
-
-    if backpack then
-        for _, obj in ipairs(backpack:GetChildren()) do
-            if isProteinEgg(obj) then
-                return obj
-            end
-        end
-    end
-
-    return nil
+    print("X:", hrp.Position.X)
+    print("Y:", hrp.Position.Y)
+    print("Z:", hrp.Position.Z)
+    print("CFrame:", hrp.CFrame)
 end
+
+showPosition()
